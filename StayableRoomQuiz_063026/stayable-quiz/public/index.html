@@ -254,7 +254,7 @@ const SHEET_ID = "1679398376787844";
 const COL = {
   task:5859634871308164, crew:3607835057622916, prop:8111434684993412,
   date:793085290516356,  seq:5296684917886852,  hrs:3044885104201604,
-  days:7548484731572100, bench:1918985197358980, notes:6422584824729476
+  days:7548484731572100, notes:6422584824729476
 };
 
 const TASKS = [
@@ -380,7 +380,6 @@ async function submitQuiz() {
       {columnId:COL.seq,   value:String(si+1)},
       {columnId:COL.hrs,   value:e.val ? h : ""},
       {columnId:COL.days,  value:e.val ? d : ""},
-      {columnId:COL.bench, value:String(t.bench)},
       {columnId:COL.notes, value:"Submitted via quiz · unit: "+e.unit}
     ], toBottom:true };
   });
