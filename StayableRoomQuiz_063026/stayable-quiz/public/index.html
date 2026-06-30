@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Room Renovation — Crew Time Estimate · Stayable</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f4f0;
+    color: #1a1a18;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 12px;
+    border: 0.5px solid #dddcd6;
+    padding: 2rem;
+  }
+
+  .logo {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #888780;
+    margin-bottom: 1.5rem;
+  }
+
+  h1 { font-size: 22px; font-weight: 500; color: #1a1a18; margin-bottom: 6px; }
+
+  .subtitle {
+    font-size: 14px;
+    color: #888780;
+    line-height: 1.5;
+    margin-bottom: 1.75rem;
+  }
+
+  .meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 1.75rem;
+  }
+
+  @media (max-width: 520px) { .meta-grid { grid-template-columns: 1fr; } }
+
+  .field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #888780;
+    margin-bottom: 5px;
+  }
+
+  .field input {
+    width: 100%;
+    padding: 9px 11px;
+    font-size: 14px;
+    border: 0.5px solid #c8c7c0;
+    border-radius: 8px;
+    background: #fafaf8;
+    color: #1a1a18;
+    transition: border-color .15s;
+  }
+
+  .field input:focus { outline: none; border-color: #378add; background: #fff; }
+  .field input.err { border-color: #e24b4a; }
+
+  .col-headers {
+    display: grid;
+    grid-template-columns: 32px 32px 1fr 110px 90px;
+    gap: 8px;
+    padding: 0 6px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #888780;
+    border-bottom: 0.5px solid #dddcd6;
+    margin-bottom: 6px;
+  }
+
+  .task-list { margin-bottom: 1.5rem; }
+
+  .task-row {
+    display: grid;
+    grid-template-columns: 32px 32px 1fr 110px 90px;
+    gap: 8px;
+    align-items: center;
+    padding: 9px 6px;
+    border-radius: 8px;
+    border: 0.5px solid transparent;
+    margin-bottom: 3px;
+    background: #fafaf8;
+    transition: background .1s, border-color .1s;
+  }
+
+  .task-row:hover { background: #f5f4f0; }
+  .task-row.dragging { opacity: .3; }
+  .task-row.drag-over { border-color: #378add; background: #e6f1fb; }
+
+  .grip {
+    cursor: grab;
+    color: #c8c7c0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+  }
+  .grip:active { cursor: grabbing; }
+  .grip svg { width: 14px; height: 14px; fill: currentColor; }
+
+  .seq { font-size: 12px; font-weight: 600; color: #b4b2a9; text-align: center; }
+
+  .tname { font-size: 14px; color: #1a1a18; line-height: 1.3; }
+  .tbench { font-size: 12px; color: #b4b2a9; margin-top: 2px; }
+
+  .task-row input[type="number"] {
+    width: 100%;
+    padding: 7px 8px;
+    font-size: 14px;
+    text-align: center;
+    border: 0.5px solid #c8c7c0;
+    border-radius: 8px;
+    background: #fff;
+    color: #1a1a18;
+  }
+  .task-row input[type="number"]:focus { outline: none; border-color: #378add; }
+
+  .task-row select {
+    width: 100%;
+    padding: 7px 6px;
+    font-size: 13px;
+    border: 0.5px solid #c8c7c0;
+    border-radius: 8px;
+    background: #fff;
+    color: #1a1a18;
+    cursor: pointer;
+  }
+  .task-row select:focus { outline: none; border-color: #378add; }
+
+  .totals {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    padding: 14px 16px;
+    background: #f5f4f0;
+    border-radius: 8px;
+    border: 0.5px solid #dddcd6;
+    margin-bottom: 1.5rem;
+  }
+
+  .totals .tlabel {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #888780;
+    margin-bottom: 3px;
+  }
+
+  .totals .tval { font-size: 17px; font-weight: 500; color: #1a1a18; }
+  .totals .tval.muted { font-size: 14px; color: #888780; font-weight: 400; }
+
+  .btn {
+    width: 100%;
+    padding: 13px;
+    background: #185fa5;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn:hover { background: #0c447c; }
+  .btn:disabled { background: #b5d4f4; cursor: not-allowed; }
+
+  .status {
+    display: none;
+    margin-top: 1rem;
+    padding: 13px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.5;
+  }
+  .status.show { display: flex; }
+  .status.loading { background: #f5f4f0; border: 0.5px solid #dddcd6; color: #5f5e5a; }
+  .status.success { background: #eaf3de; border: 0.5px solid #c0dd97; color: #3b6d11; }
+  .status.error   { background: #fcebeb; border: 0.5px solid #f7c1c1; color: #a32d2d; }
+
+  .spinner {
+    width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px;
+    border: 2px solid #dddcd6; border-top-color: #378add;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">Stayable &mdash; Room Renovation</div>
+  <h1>Crew time estimate</h1>
+  <p class="subtitle">Drag tasks into the order you&rsquo;d actually run them for a typical room turn, then enter your estimate per task for a 2-person crew.</p>
+
+  <div class="meta-grid">
+    <div class="field">
+      <label>Crew / estimator name</label>
+      <input type="text" id="crew-name" placeholder="e.g. Kaleb">
+    </div>
+    <div class="field">
+      <label>Property / room</label>
+      <input type="text" id="property" placeholder="e.g. JAX West – Rm 12">
+    </div>
+    <div class="field">
+      <label>Date</label>
+      <input type="date" id="est-date">
+    </div>
+  </div>
+
+  <div class="col-headers">
+    <span></span><span>#</span><span>Task</span>
+    <span style="text-align:center">Estimate</span>
+    <span style="text-align:center">Unit</span>
+  </div>
+
+  <div class="task-list" id="task-list"></div>
+
+  <div class="totals">
+    <div><div class="tlabel">Total hours</div><div class="tval" id="total-hrs">0.0 hrs</div></div>
+    <div><div class="tlabel">Estimated days</div><div class="tval" id="total-days">0.0 days</div></div>
+  </div>
+
+  <button class="btn" id="submit-btn" onclick="submitQuiz()">Submit estimate</button>
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+const SHEET_ID = "1679398376787844";
+
+const COL = {
+  task:5859634871308164, crew:3607835057622916, prop:8111434684993412,
+  date:793085290516356,  seq:5296684917886852,  hrs:3044885104201604,
+  days:7548484731572100, bench:1918985197358980, notes:6422584824729476
+};
+
+const TASKS = [
+  {name:"Demolition & preparation",                 bench:4},
+  {name:"Drywall repairs & finishing",              bench:6},
+  {name:"Ceiling (popcorn removal & finish)",       bench:4},
+  {name:"Electrical labor",                         bench:4},
+  {name:"Interior painting",                        bench:6},
+  {name:"Bathrooms",                                bench:8},
+  {name:"Kitchenette",                              bench:6},
+  {name:"Flooring installation",                    bench:6},
+  {name:"Doors & trim",                             bench:4},
+  {name:"FF&E / window treatments",                 bench:4},
+  {name:"Final punch list, cleanup & project mgmt", bench:3}
+];
+
+let order     = TASKS.map((_,i)=>i);
+let estimates = TASKS.map(()=>({val:"",unit:"hrs"}));
+let dragSrc   = null;
+
+const grip = `<svg viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="4" cy="3" r="1.1"/><circle cx="10" cy="3" r="1.1"/>
+  <circle cx="4" cy="7" r="1.1"/><circle cx="10" cy="7" r="1.1"/>
+  <circle cx="4" cy="11" r="1.1"/><circle cx="10" cy="11" r="1.1"/>
+</svg>`;
+
+function setStatus(type, html) {
+  const el = document.getElementById("status");
+  el.className = "status show " + type;
+  el.innerHTML = html;
+}
+
+function renderList() {
+  const list = document.getElementById("task-list");
+  list.innerHTML = "";
+  order.forEach((ti, si) => {
+    const t = TASKS[ti], e = estimates[ti];
+    const row = document.createElement("div");
+    row.className = "task-row";
+    row.draggable = true;
+    row.dataset.idx = ti;
+    row.innerHTML = `
+      <div class="grip" title="Drag to reorder">${grip}</div>
+      <div class="seq">${si+1}</div>
+      <div><div class="tname">${t.name}</div><div class="tbench">Benchmark: ${t.bench} hrs</div></div>
+      <input type="number" min="0" step="0.25" placeholder="—" value="${e.val}"
+             oninput="updateEst(${ti},'val',this.value)">
+      <select onchange="updateEst(${ti},'unit',this.value)">
+        <option value="hrs"${e.unit==='hrs'?' selected':''}>hrs</option>
+        <option value="days"${e.unit==='days'?' selected':''}>days</option>
+      </select>`;
+
+    row.addEventListener("dragstart", ev => {
+      dragSrc = ti;
+      setTimeout(() => row.classList.add("dragging"), 0);
+      ev.dataTransfer.effectAllowed = "move";
+    });
+    row.addEventListener("dragend", () => {
+      row.classList.remove("dragging");
+      document.querySelectorAll(".task-row").forEach(r => r.classList.remove("drag-over"));
+    });
+    row.addEventListener("dragover", ev => {
+      ev.preventDefault();
+      document.querySelectorAll(".task-row").forEach(r => r.classList.remove("drag-over"));
+      row.classList.add("drag-over");
+    });
+    row.addEventListener("drop", ev => {
+      ev.preventDefault();
+      const target = parseInt(row.dataset.idx);
+      if (dragSrc === null || dragSrc === target) return;
+      const from = order.indexOf(dragSrc), to = order.indexOf(target);
+      order.splice(from, 1); order.splice(to, 0, dragSrc);
+      dragSrc = null; renderList();
+    });
+
+    list.appendChild(row);
+  });
+  updateTotals();
+}
+
+function updateEst(idx, field, val) { estimates[idx][field] = val; updateTotals(); }
+
+function updateTotals() {
+  let total = 0;
+  estimates.forEach(e => {
+    if (!e.val) return;
+    const n = parseFloat(e.val) || 0;
+    total += e.unit === "days" ? n * 8 : n;
+  });
+  document.getElementById("total-hrs").textContent  = total.toFixed(1) + " hrs";
+  document.getElementById("total-days").textContent = (total / 8).toFixed(1) + " days";
+}
+
+async function submitQuiz() {
+  const name = document.getElementById("crew-name").value.trim();
+  const prop = document.getElementById("property").value.trim();
+  const date = document.getElementById("est-date").value;
+
+  document.getElementById("crew-name").classList.toggle("err", !name);
+  document.getElementById("property").classList.toggle("err", !prop);
+  if (!name || !prop) { setStatus("error", "&#9888;&nbsp; Please enter your name and property / room."); return; }
+
+  const btn = document.getElementById("submit-btn");
+  btn.disabled = true;
+  btn.textContent = "Submitting…";
+  setStatus("loading", "<div class='spinner'></div>&nbsp; Sending to Smartsheet…");
+
+  const rows = order.map((ti, si) => {
+    const t = TASKS[ti], e = estimates[ti];
+    const n = parseFloat(e.val) || 0;
+    const h = e.unit === "days" ? (n*8).toFixed(2) : n.toFixed(2);
+    const d = (parseFloat(h)/8).toFixed(3);
+    return { cells:[
+      {columnId:COL.task,  value:t.name},
+      {columnId:COL.crew,  value:name},
+      {columnId:COL.prop,  value:prop},
+      {columnId:COL.date,  value:date||null},
+      {columnId:COL.seq,   value:String(si+1)},
+      {columnId:COL.hrs,   value:e.val ? h : ""},
+      {columnId:COL.days,  value:e.val ? d : ""},
+      {columnId:COL.bench, value:String(t.bench)},
+      {columnId:COL.notes, value:"Submitted via quiz · unit: "+e.unit}
+    ], toBottom:true };
+  });
+
+  try {
+    const resp = await fetch("/api/submit", {
+      method:  "POST",
+      headers: {"Content-Type":"application/json"},
+      body:    JSON.stringify({ sheetId: SHEET_ID, rows })
+    });
+
+    const data = await resp.json();
+
+    if (resp.ok && data.success) {
+      setStatus("success", "&#10003;&nbsp; Estimate submitted — all 11 tasks logged to Smartsheet.");
+      btn.textContent = "Submitted ✓";
+    } else {
+      setStatus("error", "&#9888;&nbsp; " + (data.error || "Unexpected error — check Smartsheet."));
+      btn.disabled = false; btn.textContent = "Submit estimate";
+    }
+  } catch (err) {
+    setStatus("error", "&#9888;&nbsp; Could not reach server: " + err.message);
+    btn.disabled = false; btn.textContent = "Submit estimate";
+  }
+}
+
+renderList();
+</script>
+</body>
+</html>
