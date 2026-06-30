@@ -152,12 +152,11 @@ async function buildEstimatePdf(report) {
   rule(y); y -= 18;
 
   // Table header
-  const cx = { seq: M, task: M + 28, bench: 350, est: 430, hrs: right };
-  txt("#",        cx.seq,   y, 8, bold, muted);
-  txt("TASK",     cx.task,  y, 8, bold, muted);
-  txt("BENCH",    cx.bench, y, 8, bold, muted);
-  txt("ESTIMATE", cx.est,   y, 8, bold, muted);
-  txtR("HOURS",   cx.hrs,   y, 8, bold, muted);
+  const cx = { seq: M, task: M + 28, est: 420, hrs: right };
+  txt("#",        cx.seq,  y, 8, bold, muted);
+  txt("TASK",     cx.task, y, 8, bold, muted);
+  txt("ESTIMATE", cx.est,  y, 8, bold, muted);
+  txtR("HOURS",   cx.hrs,  y, 8, bold, muted);
   y -= 7;
   rule(y); y -= 16;
 
@@ -169,7 +168,6 @@ async function buildEstimatePdf(report) {
       : "—";
     txt(t.seq,  cx.seq,  y, 10, font, muted);
     txt(t.name, cx.task, y, 10, font, ink);
-    txt(t.bench != null ? `${t.bench} hrs` : "—", cx.bench, y, 10, font, muted);
     txt(estimate, cx.est, y, 10, font, ink);
     txtR((t.hours != null && t.hours !== "") ? t.hours : "—", cx.hrs, y, 10, font, ink);
     y -= 17;
