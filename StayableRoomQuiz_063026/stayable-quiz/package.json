@@ -2,5 +2,8 @@
   "name": "stayable-room-quiz",
   "version": "1.0.0",
   "private": true,
-  "engines": { "node": "24.x" }
+  "engines": { "node": "24.x" },
+  "dependencies": {
+    "pdf-lib": "^1.17.1"
+  }
 }

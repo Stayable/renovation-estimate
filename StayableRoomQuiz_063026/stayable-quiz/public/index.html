@@ -360,13 +360,18 @@ async function submitQuiz() {
   const btn = document.getElementById("submit-btn");
   btn.disabled = true;
   btn.textContent = "Submitting…";
-  setStatus("loading", "<div class='spinner'></div>&nbsp; Sending to Smartsheet…");
+  setStatus("loading", "<div class='spinner'></div>&nbsp; Sending to Smartsheet & building PDF…");
 
+  const reportTasks = [];
   const rows = order.map((ti, si) => {
     const t = TASKS[ti], e = estimates[ti];
     const n = parseFloat(e.val) || 0;
     const h = e.unit === "days" ? (n*8).toFixed(2) : n.toFixed(2);
     const d = (parseFloat(h)/8).toFixed(3);
+    reportTasks.push({
+      seq: si+1, name: t.name, bench: t.bench,
+      estimate: e.val || "", unit: e.unit, hours: e.val ? h : ""
+    });
     return { cells:[
       {columnId:COL.task,  value:t.name},
       {columnId:COL.crew,  value:name},
@@ -380,17 +385,29 @@ async function submitQuiz() {
     ], toBottom:true };
   });
 
+  const report = {
+    crew: name,
+    property: prop,
+    date: date,
+    totalHours: document.getElementById("total-hrs").textContent.replace(" hrs",""),
+    totalDays:  document.getElementById("total-days").textContent.replace(" days",""),
+    tasks: reportTasks
+  };
+
   try {
     const resp = await fetch("/api/submit", {
       method:  "POST",
       headers: {"Content-Type":"application/json"},
-      body:    JSON.stringify({ sheetId: SHEET_ID, rows })
+      body:    JSON.stringify({ sheetId: SHEET_ID, rows, report })
     });
 
     const data = await resp.json();
 
     if (resp.ok && data.success) {
-      setStatus("success", "&#10003;&nbsp; Estimate submitted — all 11 tasks logged to Smartsheet.");
+      let msg = "&#10003;&nbsp; Estimate submitted — all " + data.count + " tasks logged to Smartsheet.";
+      if (data.attached)        msg += " PDF summary attached to the first row.";
+      else if (data.attachError) msg += " <span style='color:#a32d2d'>(PDF attach failed: " + data.attachError + ")</span>";
+      setStatus("success", msg);
       btn.textContent = "Submitted ✓";
     } else {
       setStatus("error", "&#9888;&nbsp; " + (data.error || "Unexpected error — check Smartsheet."));
